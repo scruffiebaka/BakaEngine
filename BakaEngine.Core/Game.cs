@@ -24,64 +24,16 @@ namespace BakaEngine.Core
 
         Shader shader;
 
-        private readonly float[] vertices = {
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-            };
-
         int VertexBufferObject;
 		int VertexArrayObject;
 
 		Texture baseTex;
-		Matrix4 model;
 
         Entity cameraObject;
         Camera camera;
 
         private bool _firstMove = true;
         private Vector2 _lastPos;
-
-        float speed = .02f;
-		float xPos = 0;
 
 		protected override void OnLoad()
 		{
@@ -92,24 +44,6 @@ namespace BakaEngine.Core
 			GL.ClearColor(new Color4(24, 20, 28, 1));
 
             GL.Enable(EnableCap.DepthTest);
-
-			baseTex = Texture.LoadFromFile("./Resources/Texture/Texture.png");
-			baseTex.Use(TextureUnit.Texture0);
-
-            VertexArrayObject = GL.GenVertexArray();
-            VertexBufferObject = GL.GenBuffer();
-
-			GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
-			GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, 
-				BufferUsageHint.StaticDraw);
-
-			GL.BindVertexArray(VertexArrayObject);
-
-			GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
-			GL.EnableVertexAttribArray(0);
-
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
 
             shader = new Shader("./Resources/Shaders/VertexShader.glsl", "./Resources/Shaders/FragmentShader.glsl");
             shader.Use();
@@ -122,7 +56,8 @@ namespace BakaEngine.Core
             cameraObject.AddComponent(new Camera());
             camera = cameraObject.GetComponent<Camera>();
 
-            SceneManager.SetActiveCamera(camera);
+            demoScene.SetActiveCamera(camera);
+            demoScene.entities.Add(cameraObject);
 
             cameraObject.transform.localRotation.Y = - MathHelper.PiOver2;
         }
@@ -135,22 +70,38 @@ namespace BakaEngine.Core
 
 			shader.Use();
 
-			GL.BindVertexArray(VertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
-
-            model = Matrix4.CreateTranslation(xPos, 0.0f, 0.0f) * Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-55.0f));
-
-            shader.SetMatrix4("model", model);
-
-            if (SceneManager.GetActiveCamera() != null)
+            // Manage all cameras in the scene.
+            if (SceneManager.currentActiveScene.currentActiveCamera != null)
             {
-                shader.SetMatrix4("view", SceneManager.GetActiveCamera().GetViewMatrix(cameraObject.transform.localPosition) * 3);
-                shader.SetMatrix4("projection", SceneManager.GetActiveCamera().GetProjectionMatrix());
-                SceneManager.GetActiveCamera().UpdateVectors(cameraObject.transform.localRotation.X, cameraObject.transform.localRotation.Y);
+                shader.SetMatrix4("view", SceneManager.currentActiveScene.currentActiveCamera.GetViewMatrix(cameraObject.transform.localPosition) * 3);
+                shader.SetMatrix4("projection", SceneManager.currentActiveScene.currentActiveCamera.GetProjectionMatrix());
+                SceneManager.currentActiveScene.currentActiveCamera.UpdateVectors(cameraObject.transform.localRotation.X, cameraObject.transform.localRotation.Y);
             }
             else
             {
                 Debug.Error("No camera active.");
+                GL.ClearColor(new Color4(0, 0, 0, 1));
+            }
+
+            if(SceneManager.currentActiveScene != null)
+            {
+                //Draw all meshes in the scene.
+                foreach(Entity entity in SceneManager.currentActiveScene.entities)
+                {
+                    if(entity == null)
+                    {
+                        continue;
+                    }
+                    Mesh? meshComponent = entity.GetComponent<Mesh>();
+                    if(meshComponent != null)
+                    {
+                        meshComponent.Draw(shader, entity.GetComponent<Transform>());
+                    }
+                }
+            }
+            else
+            {
+                Debug.Error("No scene active.");
                 GL.ClearColor(new Color4(0, 0, 0, 1));
             }
 
@@ -208,7 +159,6 @@ namespace BakaEngine.Core
             }
             else
             {
-                // Calculate the offset of the mouse position
                 var deltaX = mouse.X - _lastPos.X;
                 var deltaY = mouse.Y - _lastPos.Y;
                 _lastPos = new Vector2(mouse.X, mouse.Y);

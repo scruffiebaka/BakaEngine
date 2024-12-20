@@ -5,7 +5,7 @@ using StbImageSharp;
 
 namespace BakaEngine.Core.Rendering
 {
-    internal class Texture
+    public class Texture
     {
         public readonly int Handle;
 

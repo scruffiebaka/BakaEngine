@@ -18,7 +18,6 @@ namespace BakaEngine.Core.Scenes
         }
 
         public static Scene? currentActiveScene;
-        public static Camera? currentActiveCamera;
 
         private static List<Scene> scenes = new List<Scene>();
 
@@ -38,20 +37,6 @@ namespace BakaEngine.Core.Scenes
         public static void SetActiveScene(Scene scene)
         {
             currentActiveScene = scene;
-        }
-
-        public static Scene? GetActiveScene()
-        {
-            return currentActiveScene;
-        }
-        public static void SetActiveCamera(Camera camera)
-        {
-            currentActiveCamera = camera;
-        }
-
-        public static Camera? GetActiveCamera()
-        {
-            return currentActiveCamera;
         }
     }
 }

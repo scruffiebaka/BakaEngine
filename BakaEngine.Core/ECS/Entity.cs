@@ -10,7 +10,7 @@ namespace BakaEngine.Core.ECS
     {
         private Entity? parent;
 
-        private string entityName;
+        public string entityName;
 
         private List<Component> entityComponents = new List<Component>();
 
