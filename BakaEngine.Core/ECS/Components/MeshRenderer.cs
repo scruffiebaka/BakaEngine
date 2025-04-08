@@ -16,7 +16,7 @@ namespace BakaEngine.Core.ECS.Components
             shader.SetMatrix4("mesh", 
                 Matrix4.CreateTranslation(transform.Position)
                 * Matrix4.CreateScale(transform.Scale)
-                * Matrix4.CreateFromQuaternion(transform.QuaternionRotation));
+                * Matrix4.CreateFromQuaternion(transform.Rotation));
 
             if (Textures.Count > 0)
             {

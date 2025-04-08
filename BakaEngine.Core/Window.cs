@@ -31,7 +31,9 @@ namespace BakaEngine.Core
 
         Entity cameraObject;
         Entity cubeObject;
+
         Camera camera;
+        float xRotation, yRotation;
 
         private bool _firstMove = true;
         private Vector2 _lastPos;
@@ -66,9 +68,9 @@ namespace BakaEngine.Core
                 //Manage Cameras
                 if (SceneManager.currentActiveScene.currentActiveCamera != null)
                 {
-                    shader.SetMatrix4("view", SceneManager.currentActiveScene.currentActiveCamera.GetViewMatrix(cameraObject.transform.Position) * 3);
-                    shader.SetMatrix4("projection", SceneManager.currentActiveScene.currentActiveCamera.GetProjectionMatrix());
-                    SceneManager.currentActiveScene.currentActiveCamera.UpdateVectors(cameraObject.transform.Rotation.X, cameraObject.transform.Rotation.Y);
+                    SceneManager.currentActiveScene.currentActiveCamera.GetComponent<Camera>().UpdateVectors(MathHelper.DegreesToRadians(SceneManager.currentActiveScene.currentActiveCamera.transform.eulerAngles.X), MathHelper.DegreesToRadians(SceneManager.currentActiveScene.currentActiveCamera.transform.eulerAngles.Y));
+                    shader.SetMatrix4("view", SceneManager.currentActiveScene.currentActiveCamera.GetComponent<Camera>().GetViewMatrix(SceneManager.currentActiveScene.currentActiveCamera.transform.Position));
+                    shader.SetMatrix4("projection", SceneManager.currentActiveScene.currentActiveCamera.GetComponent<Camera>().GetProjectionMatrix());
                 }
                 else
                 {
@@ -83,8 +85,10 @@ namespace BakaEngine.Core
                     {
                         continue;
                     }
-                    if(entity.TryGetComponent<MeshRenderer>(out var renderer) && entity.TryGetComponent<Transform>(out var transform)){
-                        foreach(Mesh mesh in renderer.Meshes){
+                    if (entity.TryGetComponent<MeshRenderer>(out var renderer) && entity.TryGetComponent<Transform>(out var transform))
+                    {
+                        foreach (Mesh mesh in renderer.Meshes)
+                        {
                             renderer.Draw(shader, transform, mesh);
                         }
                     }
@@ -124,12 +128,12 @@ namespace BakaEngine.Core
         #region TEST
         private void TestInitial_Entities()
         {
+            CursorState = CursorState.Grabbed;
             Scene demoScene = new Scene("DemoScene");
 
             SceneManager.SetActiveScene(demoScene);
 
             cameraObject = new Entity("Camera");
-            //cameraObject.AddComponent(new Camera());
             camera = cameraObject.GetComponent<Camera>();
 
             baseTex = new Texture(Texture.LoadFromFile("Resources/Textures/texture.png"), "texture_diffuse");
@@ -188,17 +192,16 @@ namespace BakaEngine.Core
         }));
             cubeMesh.Textures.Add(baseTex);
 
-            if(camera != null) demoScene.SetActiveCamera(camera);
+            if (camera != null) demoScene.SetActiveCamera(cameraObject);
             demoScene.entities.Add(cameraObject);
             demoScene.entities.Add(cubeObject);
 
-            cameraObject.transform.Rotation.Y = -MathHelper.PiOver2;
+            cameraObject.transform.Rotation = Quaternion.FromEulerAngles(0, -MathHelper.PiOver2, 0);
         }
         private void TestCamera_Movement()
         {
-
             const float cameraSpeed = 1.5f;
-            const float sensitivity = 0.01f;
+            const float sensitivity = 1f;
 
             if (Input.IsKeyDown(Keys.W))
             {
@@ -226,6 +229,23 @@ namespace BakaEngine.Core
                 cameraObject.transform.Position -= camera.Up * cameraSpeed * (float)updateArguements.Time; // Down
             }
 
+            Quaternion rotation = cubeObject.transform.Rotation;
+
+            float angle = cameraSpeed * (float)updateArguements.Time;
+
+            // Create axis-angle quaternions
+            if (Input.IsKeyDown(Keys.K)) // Rotate around local X+
+                rotation = Quaternion.FromAxisAngle(Vector3.UnitX, angle) * rotation;
+            if (Input.IsKeyDown(Keys.J)) // Rotate around local X-
+                rotation = Quaternion.FromAxisAngle(Vector3.UnitX, -angle) * rotation;
+            if (Input.IsKeyDown(Keys.H)) // Rotate around local Y+
+                rotation = Quaternion.FromAxisAngle(Vector3.UnitY, angle) * rotation;
+            if (Input.IsKeyDown(Keys.L)) // Rotate around local Y-
+                rotation = Quaternion.FromAxisAngle(Vector3.UnitY, -angle) * rotation;
+
+            rotation.Normalize(); // Always normalize to avoid drift
+            cubeObject.transform.Rotation = rotation;
+
             var mouse = MouseState;
 
             if (_firstMove)
@@ -239,11 +259,16 @@ namespace BakaEngine.Core
                 var deltaY = mouse.Y - _lastPos.Y;
                 _lastPos = new Vector2(mouse.X, mouse.Y);
 
-                cameraObject.transform.Rotation.Y += deltaX * sensitivity;
-                cameraObject.transform.Rotation.X -= deltaY * sensitivity;
+                yRotation += deltaX * sensitivity * (float)updateArguements.Time;
+                xRotation -= deltaY * sensitivity * (float)updateArguements.Time;
+
+                xRotation = Math.Clamp(xRotation, -90f, 90f);
+                //TODO: Make a function called quaternion.euler() that takes in degrees for the fromeulerangles function.
+                cameraObject.transform.Rotation = Quaternion.FromEulerAngles(xRotation, yRotation, 0);
             }
+            Debug.Log(cameraObject.transform.eulerAngles.X.ToString() + "  " +cameraObject.transform.eulerAngles.Y.ToString() + "  " + cameraObject.transform.eulerAngles.Z.ToString());
         }
-        
+
         #endregion
     }
 }

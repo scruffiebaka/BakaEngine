@@ -6,7 +6,7 @@ namespace BakaEngine.Core.ECS.Scenes
     public class Scene
     {
         string Name;
-        public Camera? currentActiveCamera;
+        public Entity? currentActiveCamera;
 
         public Scene(string name)
         {
@@ -15,7 +15,7 @@ namespace BakaEngine.Core.ECS.Scenes
 
         public List<Entity> entities = new List<Entity>();
 
-        public void SetActiveCamera(Camera camera)
+        public void SetActiveCamera(Entity camera)
         {
             currentActiveCamera = camera;
         }
