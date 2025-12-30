@@ -29,11 +29,9 @@ namespace BakaEngine.Core
 
         Texture baseTex;
 
-        Entity cameraObject;
         Entity cubeObject;
 
         Camera camera;
-        float xRotation, yRotation;
 
         private bool _firstMove = true;
         private Vector2 _lastPos;
@@ -51,6 +49,9 @@ namespace BakaEngine.Core
             shader = new Shader("./Resources/Shaders/VertexShader.glsl", "./Resources/Shaders/FragmentShader.glsl");
             shader.Use();
 
+            camera = new Camera(Vector3.UnitZ * 3, Size.X / (float)Size.Y);
+            CursorState = CursorState.Grabbed;
+
             TestInitial_Entities();
         }
 
@@ -65,12 +66,10 @@ namespace BakaEngine.Core
 
             if (SceneManager.currentActiveScene != null)
             {
-                //Manage Cameras
-                if (SceneManager.currentActiveScene.currentActiveCamera != null)
+                if (camera != null)
                 {
-                    SceneManager.currentActiveScene.currentActiveCamera.GetComponent<Camera>().UpdateVectors(MathHelper.DegreesToRadians(SceneManager.currentActiveScene.currentActiveCamera.transform.eulerAngles.X), MathHelper.DegreesToRadians(SceneManager.currentActiveScene.currentActiveCamera.transform.eulerAngles.Y));
-                    shader.SetMatrix4("view", SceneManager.currentActiveScene.currentActiveCamera.GetComponent<Camera>().GetViewMatrix(SceneManager.currentActiveScene.currentActiveCamera.transform.Position));
-                    shader.SetMatrix4("projection", SceneManager.currentActiveScene.currentActiveCamera.GetComponent<Camera>().GetProjectionMatrix());
+                    shader.SetMatrix4("view", camera.GetViewMatrix());
+                    shader.SetMatrix4("projection", camera.GetProjectionMatrix());
                 }
                 else
                 {
@@ -125,18 +124,13 @@ namespace BakaEngine.Core
             shader.Dispose();
         }
 
-        #region TEST
         private void TestInitial_Entities()
         {
-            CursorState = CursorState.Grabbed;
             Scene demoScene = new Scene("DemoScene");
 
             SceneManager.SetActiveScene(demoScene);
 
-            cameraObject = new Entity("Camera");
-            camera = cameraObject.GetComponent<Camera>();
-
-            baseTex = new Texture(Texture.LoadFromFile("Resources/Textures/texture.png"), "texture_diffuse");
+            baseTex = new Texture(Texture.LoadFromFile("Resources/Textures/texture.jpg"), "texture_diffuse");
 
             cubeObject = new Entity("Cube");
             MeshRenderer cubeMesh = cubeObject.GetComponent<MeshRenderer>();
@@ -192,63 +186,43 @@ namespace BakaEngine.Core
         }));
             cubeMesh.Textures.Add(baseTex);
 
-            if (camera != null) demoScene.SetActiveCamera(cameraObject);
-            demoScene.entities.Add(cameraObject);
             demoScene.entities.Add(cubeObject);
-
-            cameraObject.transform.Rotation = Quaternion.FromEulerAngles(0, -MathHelper.PiOver2, 0);
         }
+
         private void TestCamera_Movement()
         {
             const float cameraSpeed = 1.5f;
-            const float sensitivity = 1f;
+            const float sensitivity = 0.2f;
 
             if (Input.IsKeyDown(Keys.W))
             {
-                cameraObject.transform.Position += camera.Front * cameraSpeed * (float)updateArguements.Time; // Forward
+                camera.Position += camera.Front * cameraSpeed * (float)updateArguements.Time; // Forward
             }
 
             if (Input.IsKeyDown(Keys.S))
             {
-                cameraObject.transform.Position -= camera.Front * cameraSpeed * (float)updateArguements.Time; // Backwards
+                camera.Position -= camera.Front * cameraSpeed * (float)updateArguements.Time; // Backwards
             }
             if (Input.IsKeyDown(Keys.A))
             {
-                cameraObject.transform.Position -= camera.Right * cameraSpeed * (float)updateArguements.Time; // Left
+                camera.Position -= camera.Right * cameraSpeed * (float)updateArguements.Time; // Left
             }
             if (Input.IsKeyDown(Keys.D))
             {
-                cameraObject.transform.Position += camera.Right * cameraSpeed * (float)updateArguements.Time; // Right
+                camera.Position += camera.Right * cameraSpeed * (float)updateArguements.Time; // Right
             }
             if (Input.IsKeyDown(Keys.Space))
             {
-                cameraObject.transform.Position += camera.Up * cameraSpeed * (float)updateArguements.Time; // Up
+                camera.Position += camera.Up * cameraSpeed * (float)updateArguements.Time; // Up
             }
             if (Input.IsKeyDown(Keys.LeftShift))
             {
-                cameraObject.transform.Position -= camera.Up * cameraSpeed * (float)updateArguements.Time; // Down
+                camera.Position -= camera.Up * cameraSpeed * (float)updateArguements.Time; // Down
             }
-
-            Quaternion rotation = cubeObject.transform.Rotation;
-
-            float angle = cameraSpeed * (float)updateArguements.Time;
-
-            // Create axis-angle quaternions
-            if (Input.IsKeyDown(Keys.K)) // Rotate around local X+
-                rotation = Quaternion.FromAxisAngle(Vector3.UnitX, angle) * rotation;
-            if (Input.IsKeyDown(Keys.J)) // Rotate around local X-
-                rotation = Quaternion.FromAxisAngle(Vector3.UnitX, -angle) * rotation;
-            if (Input.IsKeyDown(Keys.H)) // Rotate around local Y+
-                rotation = Quaternion.FromAxisAngle(Vector3.UnitY, angle) * rotation;
-            if (Input.IsKeyDown(Keys.L)) // Rotate around local Y-
-                rotation = Quaternion.FromAxisAngle(Vector3.UnitY, -angle) * rotation;
-
-            rotation.Normalize(); // Always normalize to avoid drift
-            cubeObject.transform.Rotation = rotation;
 
             var mouse = MouseState;
 
-            if (_firstMove)
+            if (_firstMove) // This bool variable is initially set to true.
             {
                 _lastPos = new Vector2(mouse.X, mouse.Y);
                 _firstMove = false;
@@ -259,16 +233,9 @@ namespace BakaEngine.Core
                 var deltaY = mouse.Y - _lastPos.Y;
                 _lastPos = new Vector2(mouse.X, mouse.Y);
 
-                yRotation += deltaX * sensitivity * (float)updateArguements.Time;
-                xRotation -= deltaY * sensitivity * (float)updateArguements.Time;
-
-                xRotation = Math.Clamp(xRotation, -90f, 90f);
-                //TODO: Make a function called quaternion.euler() that takes in degrees for the fromeulerangles function.
-                cameraObject.transform.Rotation = Quaternion.FromEulerAngles(xRotation, yRotation, 0);
+                camera.Yaw += deltaX * sensitivity;
+                camera.Pitch -= deltaY * sensitivity;
             }
-            Debug.Log(cameraObject.transform.eulerAngles.X.ToString() + "  " +cameraObject.transform.eulerAngles.Y.ToString() + "  " + cameraObject.transform.eulerAngles.Z.ToString());
         }
-
-        #endregion
     }
 }

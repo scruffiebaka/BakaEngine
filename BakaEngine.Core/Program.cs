@@ -4,7 +4,7 @@
     {
         static void Main(string[] args)
         {
-            Window window = new Window(800, 640, "BakaEngine");
+            Window window = new Window(1024, 720, "BakaEngine");
             window.Run();
         }
     }
