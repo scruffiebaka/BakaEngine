@@ -8,44 +8,47 @@ namespace BakaEngine.Core.ECS.Components
 {
     public class MeshRenderer : Component
     {
-        public List<Mesh> Meshes = new List<Mesh>();
-        public List<Texture> Textures = new List<Texture>();
+        Shader shader;
+        Mesh mesh; 
+        Texture texture;
+        Material material;
 
-        public void Draw(Shader shader, Transform transform, Mesh mesh)
+        //uhh test
+        Vector3 _lightPos = new Vector3(1.0f, 1.0f, 2.0f);
+
+        public MeshRenderer(Shader shader, Mesh mesh, Texture texture, Material material)
         {
-            shader.SetMatrix4("mesh", 
+            this.shader = shader;
+            this.mesh = mesh;
+            this.texture = texture;
+            this.material = material;
+        }
+
+        public void Draw(Transform transform)
+        {
+            shader.Use();
+
+            shader.SetMatrix4("model", 
                 Matrix4.CreateTranslation(transform.Position)
                 * Matrix4.CreateScale(transform.Scale)
                 * Matrix4.CreateFromQuaternion(transform.Rotation));
 
-            if (Textures.Count > 0)
-            {
-                int diffuseN = 1;
-                int specularN = 1;
-                for (int i = 0; i < Textures.Count(); i++)
-                {
-                    GL.ActiveTexture(TextureUnit.Texture0 + i);
-                    string number;
-                    string name = Textures[i].Type;
-                    if(name == "texture_diffuse")
-                    {
-                        number = diffuseN++.ToString();
-                    }
-                    else if(name == "texture_specular")
-                    {
-                        number = specularN++.ToString();
-                    }
-                    else
-                    {
-                        Debug.Error("Texture name not formatted.");
-                        return;
-                    }
+            //TODO: also implement specular textures.
 
-                    shader.SetInt(name + "" + number, Textures[i].Handle);
-                    GL.BindTexture(TextureTarget.Texture2D, Textures[i].Handle);
-                }
+            if(texture.Type == TextureType.texture_diffuse)
+            {
                 GL.ActiveTexture(TextureUnit.Texture0);
+                GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
             }
+            
+            shader.SetInt("material.diffuse", material.diffuse);
+            shader.SetInt("material.specular", material.specular);
+            shader.SetFloat("material.shininess", material.shininess);
+
+            shader.SetVector3("light.position", _lightPos);
+            shader.SetVector3("light.ambient", new Vector3(0.2f));
+            shader.SetVector3("light.diffuse", new Vector3(0.5f));
+            shader.SetVector3("light.specular", new Vector3(1.0f));
 
             GL.BindVertexArray(mesh.VertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, mesh.Indices.Count, DrawElementsType.UnsignedInt, 0);

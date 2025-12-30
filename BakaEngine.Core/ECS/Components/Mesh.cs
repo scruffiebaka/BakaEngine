@@ -20,13 +20,16 @@ namespace BakaEngine.Core.ECS.Components
     {
         public List<Vertex> Vertices { get; private set; }
         public List<uint> Indices { get; private set; }
+        public Shader shader;
 
         public int VertexArrayObject, VertexBufferObject, ElementBufferObject;
 
-        public Mesh(List<Vertex> vertices, List<uint> indices)
+        public Mesh(List<Vertex> vertices, List<uint> indices, Shader shader)
         {
             this.Vertices = vertices;
             this.Indices = indices;
+
+            this.shader = shader;
 
             SetupMesh();
         }
@@ -41,24 +44,24 @@ namespace BakaEngine.Core.ECS.Components
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
             //TODO: i got 32 by calculating the size myself. this is very stupid. please fix this.
-            GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Count * 32, Vertices.ToArray(),
-                BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Count * 32, Vertices.ToArray(), BufferUsageHint.StaticDraw);
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ElementBufferObject);
             GL.BufferData(BufferTarget.ElementArrayBuffer, Indices.Count * sizeof(uint), Indices.ToArray(), BufferUsageHint.StaticDraw);
 
             //Position attribute
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 32, 0);
-            GL.EnableVertexAttribArray(0);
+            var positionLocation = shader.GetAttribLocation("aPos");
+            GL.EnableVertexAttribArray(positionLocation);
+            GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
 
-            //Normal attribute
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 32, Vector3.SizeInBytes);
-            GL.EnableVertexAttribArray(1);
+            var normalLocation = shader.GetAttribLocation("aNormal");
+            GL.EnableVertexAttribArray(normalLocation);
+            GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
 
-            //TextureCoordinate attribute
-            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 32, Vector3.SizeInBytes * 2);
-            GL.EnableVertexAttribArray(2);
-
+            var texCoordLocation = shader.GetAttribLocation("aTexCoords");
+            GL.EnableVertexAttribArray(texCoordLocation);
+            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
+            
             GL.BindVertexArray(0);
         }
     }

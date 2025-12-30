@@ -1,5 +1,7 @@
+using System;
 using System.IO;
-
+using System.Text;
+using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
@@ -7,39 +9,45 @@ namespace BakaEngine.Core.Rendering
 {
     public class Shader
     {
-        public int Handle;
+        public readonly int Handle;
 
-        public Shader(string vertexPath, string fragmentPath)
+        private readonly Dictionary<string, int> UniformLocations;
+
+        public Shader(string vertPath, string fragPath)
         {
-            int VertexShader;
-            int FragmentShader;
+            var shaderSource = File.ReadAllText(vertPath);
+            var vertexShader = GL.CreateShader(ShaderType.VertexShader);
 
-            string vertexShaderSource = File.ReadAllText(vertexPath);
-            string fragmentShaderSource = File.ReadAllText(fragmentPath);
+            GL.ShaderSource(vertexShader, shaderSource);
 
-            VertexShader = GL.CreateShader(ShaderType.VertexShader);
-            GL.ShaderSource(VertexShader, vertexShaderSource);
+            GL.CompileShader(vertexShader);
 
-            FragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-            GL.ShaderSource(FragmentShader, fragmentShaderSource);
-
-            //if this fucking fails then the program just FUCKING DIES
-            // IM NOT DOING THE DEBUGGING RETARD SHIT
-            GL.CompileShader(VertexShader);
-            GL.CompileShader(FragmentShader);
+            shaderSource = File.ReadAllText(fragPath);
+            var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(fragmentShader, shaderSource);
+            GL.CompileShader(fragmentShader);
 
             Handle = GL.CreateProgram();
 
-            GL.AttachShader(Handle, VertexShader);
-            GL.AttachShader(Handle, FragmentShader);
+            GL.AttachShader(Handle, vertexShader);
+            GL.AttachShader(Handle, fragmentShader);
 
             GL.LinkProgram(Handle);
 
-            GL.DetachShader(Handle, VertexShader);
-            GL.DetachShader(Handle, FragmentShader);
+            GL.DetachShader(Handle, vertexShader);
+            GL.DetachShader(Handle, fragmentShader);
+            GL.DeleteShader(fragmentShader);
+            GL.DeleteShader(vertexShader);
 
-            GL.DeleteShader(VertexShader);
-            GL.DeleteShader(FragmentShader);
+            GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
+
+            UniformLocations = new Dictionary<string, int>();
+            for (var i = 0; i < numberOfUniforms; i++)
+            {
+                var key = GL.GetActiveUniform(Handle, i, out _, out _);
+                var location = GL.GetUniformLocation(Handle, key);
+                UniformLocations.Add(key, location);
+            }
         }
 
         public void Use()
@@ -47,45 +55,33 @@ namespace BakaEngine.Core.Rendering
             GL.UseProgram(Handle);
         }
 
-        public void SetMatrix4(string name, Matrix4 matrix)
+        public int GetAttribLocation(string attribName)
         {
-            GL.UseProgram(Handle);
-            int glLocation = GL.GetUniformLocation(Handle, name);
-            GL.UniformMatrix4(glLocation, true, ref matrix);
+            return GL.GetAttribLocation(Handle, attribName);
         }
 
         public void SetInt(string name, int data)
         {
             GL.UseProgram(Handle);
-            int glLocation = GL.GetUniformLocation(Handle, name);
-            GL.Uniform1(glLocation, data);
+            GL.Uniform1(UniformLocations[name], data);
         }
 
-
-        private bool disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
+        public void SetFloat(string name, float data)
         {
-            if (!disposedValue)
-            {
-                GL.DeleteProgram(Handle);
-
-                disposedValue = true;
-            }
+            GL.UseProgram(Handle);
+            GL.Uniform1(UniformLocations[name], data);
         }
 
-        ~Shader()
+        public void SetMatrix4(string name, Matrix4 data)
         {
-            if (disposedValue == false)
-            {
-                Console.WriteLine("GPU Resource leak! Did you forget to call Dispose()?");
-            }
+            GL.UseProgram(Handle);
+            GL.UniformMatrix4(UniformLocations[name], true, ref data);
         }
 
-        public void Dispose()
+        public void SetVector3(string name, Vector3 data)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            GL.UseProgram(Handle);
+            GL.Uniform3(UniformLocations[name], data);
         }
     }
 }

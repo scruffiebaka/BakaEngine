@@ -12,7 +12,7 @@ namespace BakaEngine.Core.ECS
 
         public string entityName;
 
-        private Dictionary<Type, object> entityComponents = new Dictionary<Type, object>();
+        public Dictionary<Type, object> entityComponents = new Dictionary<Type, object>();
 
         public Transform transform;
 

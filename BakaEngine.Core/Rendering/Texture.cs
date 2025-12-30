@@ -5,12 +5,18 @@ using StbImageSharp;
 
 namespace BakaEngine.Core.Rendering
 {
+    public enum TextureType
+    {
+        texture_diffuse,
+        texture_specular
+    }
+
     public class Texture
     {
         public readonly int Handle;
-        public string Type;
+        public TextureType Type;
 
-        public Texture(int handle, string type)
+        public Texture(int handle, TextureType type)
         {
             Handle = handle;
             Type = type;

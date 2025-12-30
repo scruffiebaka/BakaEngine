@@ -27,10 +27,6 @@ namespace BakaEngine.Core
 
         Shader shader;
 
-        Texture baseTex;
-
-        Entity cubeObject;
-
         Camera camera;
 
         private bool _firstMove = true;
@@ -41,18 +37,27 @@ namespace BakaEngine.Core
             base.OnLoad();
 
             GL.LoadBindings(new GLFWBindingsContext());
-
             GL.ClearColor(new Color4(24, 20, 28, 1));
-
             GL.Enable(EnableCap.DepthTest);
 
             shader = new Shader("./Resources/Shaders/VertexShader.glsl", "./Resources/Shaders/FragmentShader.glsl");
             shader.Use();
-
+            
             camera = new Camera(Vector3.UnitZ * 3, Size.X / (float)Size.Y);
             CursorState = CursorState.Grabbed;
 
-            TestInitial_Entities();
+            Scene demoScene = new Scene("DemoScene");
+            SceneManager.SetActiveScene(demoScene);
+
+            Texture baseTex = new Texture(Texture.LoadFromFile("Resources/Textures/texture.jpg"), TextureType.texture_diffuse);
+            Material baseMat = new Material(0, 1, 32.0f);
+            Entity cubeObject = new Entity("Cube");
+            Mesh cubeMesh = new Mesh(BasicShapes.CUBE_VERTICES, BasicShapes.CUBE_INDICES, shader);
+            MeshRenderer cubeMeshRenderer = new MeshRenderer(shader, cubeMesh, baseTex, baseMat);
+
+            cubeObject.entityComponents.Add(typeof(MeshRenderer), cubeMeshRenderer);
+
+            demoScene.entities.Add(cubeObject);
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -61,15 +66,13 @@ namespace BakaEngine.Core
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            shader.Use();
-
-
             if (SceneManager.currentActiveScene != null)
             {
                 if (camera != null)
                 {
                     shader.SetMatrix4("view", camera.GetViewMatrix());
                     shader.SetMatrix4("projection", camera.GetProjectionMatrix());
+                    shader.SetVector3("viewPos", camera.Position);
                 }
                 else
                 {
@@ -86,10 +89,7 @@ namespace BakaEngine.Core
                     }
                     if (entity.TryGetComponent<MeshRenderer>(out var renderer) && entity.TryGetComponent<Transform>(out var transform))
                     {
-                        foreach (Mesh mesh in renderer.Meshes)
-                        {
-                            renderer.Draw(shader, transform, mesh);
-                        }
+                        renderer.Draw(transform);
                     }
                 }
             }
@@ -120,73 +120,6 @@ namespace BakaEngine.Core
         protected override void OnUnload()
         {
             base.OnUnload();
-
-            shader.Dispose();
-        }
-
-        private void TestInitial_Entities()
-        {
-            Scene demoScene = new Scene("DemoScene");
-
-            SceneManager.SetActiveScene(demoScene);
-
-            baseTex = new Texture(Texture.LoadFromFile("Resources/Textures/texture.jpg"), "texture_diffuse");
-
-            cubeObject = new Entity("Cube");
-            MeshRenderer cubeMesh = cubeObject.GetComponent<MeshRenderer>();
-            cubeMesh.Meshes.Add(new Mesh(new List<Vertex> {
-            // Front face
-            new Vertex { Position = new Vector3(-0.5f, -0.5f,  0.5f), Normal = new Vector3(0, 0, 1), TexCoords = new Vector2(0, 0) },
-            new Vertex { Position = new Vector3( 0.5f, -0.5f,  0.5f), Normal = new Vector3(0, 0, 1), TexCoords = new Vector2(1, 0) },
-            new Vertex { Position = new Vector3( 0.5f,  0.5f,  0.5f), Normal = new Vector3(0, 0, 1), TexCoords = new Vector2(1, 1) },
-            new Vertex { Position = new Vector3(-0.5f,  0.5f,  0.5f), Normal = new Vector3(0, 0, 1), TexCoords = new Vector2(0, 1) },
-
-            // Back face
-            new Vertex { Position = new Vector3(-0.5f, -0.5f, -0.5f), Normal = new Vector3(0, 0, -1), TexCoords = new Vector2(0, 0) },
-            new Vertex { Position = new Vector3( 0.5f, -0.5f, -0.5f), Normal = new Vector3(0, 0, -1), TexCoords = new Vector2(1, 0) },
-            new Vertex { Position = new Vector3( 0.5f,  0.5f, -0.5f), Normal = new Vector3(0, 0, -1), TexCoords = new Vector2(1, 1) },
-            new Vertex { Position = new Vector3(-0.5f,  0.5f, -0.5f), Normal = new Vector3(0, 0, -1), TexCoords = new Vector2(0, 1) },
-
-            // Left face
-            new Vertex { Position = new Vector3(-0.5f, -0.5f, -0.5f), Normal = new Vector3(-1, 0, 0), TexCoords = new Vector2(0, 0) },
-            new Vertex { Position = new Vector3(-0.5f, -0.5f,  0.5f), Normal = new Vector3(-1, 0, 0), TexCoords = new Vector2(1, 0) },
-            new Vertex { Position = new Vector3(-0.5f,  0.5f,  0.5f), Normal = new Vector3(-1, 0, 0), TexCoords = new Vector2(1, 1) },
-            new Vertex { Position = new Vector3(-0.5f,  0.5f, -0.5f), Normal = new Vector3(-1, 0, 0), TexCoords = new Vector2(0, 1) },
-
-            // Right face
-            new Vertex { Position = new Vector3( 0.5f, -0.5f, -0.5f), Normal = new Vector3(1, 0, 0), TexCoords = new Vector2(0, 0) },
-            new Vertex { Position = new Vector3( 0.5f, -0.5f,  0.5f), Normal = new Vector3(1, 0, 0), TexCoords = new Vector2(1, 0) },
-            new Vertex { Position = new Vector3( 0.5f,  0.5f,  0.5f), Normal = new Vector3(1, 0, 0), TexCoords = new Vector2(1, 1) },
-            new Vertex { Position = new Vector3( 0.5f,  0.5f, -0.5f), Normal = new Vector3(1, 0, 0), TexCoords = new Vector2(0, 1) },
-
-            // Top face
-            new Vertex { Position = new Vector3(-0.5f,  0.5f, -0.5f), Normal = new Vector3(0, 1, 0), TexCoords = new Vector2(0, 0) },
-            new Vertex { Position = new Vector3(-0.5f,  0.5f,  0.5f), Normal = new Vector3(0, 1, 0), TexCoords = new Vector2(1, 0) },
-            new Vertex { Position = new Vector3( 0.5f,  0.5f,  0.5f), Normal = new Vector3(0, 1, 0), TexCoords = new Vector2(1, 1) },
-            new Vertex { Position = new Vector3( 0.5f,  0.5f, -0.5f), Normal = new Vector3(0, 1, 0), TexCoords = new Vector2(0, 1) },
-
-            // Bottom face
-            new Vertex { Position = new Vector3(-0.5f, -0.5f, -0.5f), Normal = new Vector3(0, -1, 0), TexCoords = new Vector2(0, 0) },
-            new Vertex { Position = new Vector3(-0.5f, -0.5f,  0.5f), Normal = new Vector3(0, -1, 0), TexCoords = new Vector2(1, 0) },
-            new Vertex { Position = new Vector3( 0.5f, -0.5f,  0.5f), Normal = new Vector3(0, -1, 0), TexCoords = new Vector2(1, 1) },
-            new Vertex { Position = new Vector3( 0.5f, -0.5f, -0.5f), Normal = new Vector3(0, -1, 0), TexCoords = new Vector2(0, 1) },
-        }, new List<uint>{
-            // Front face
-            0, 1, 2, 2, 3, 0,
-            // Back face
-            4, 5, 6, 6, 7, 4,
-            // Left face
-            8, 9, 10, 10, 11, 8,
-            // Right face
-            12, 13, 14, 14, 15, 12,
-            // Top face
-            16, 17, 18, 18, 19, 16,
-            // Bottom face
-            20, 21, 22, 22, 23, 20
-        }));
-            cubeMesh.Textures.Add(baseTex);
-
-            demoScene.entities.Add(cubeObject);
         }
 
         private void TestCamera_Movement()
