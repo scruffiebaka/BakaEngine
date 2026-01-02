@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using BakaEngine.Core.ECS.Scenes;
+using BakaEngine.Core.Scenes;
 using BakaEngine.Core.Helpers;
 using BakaEngine.Core.Rendering;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace BakaEngine.Core.ECS.Components
+namespace BakaEngine.Core.Components
 {
     public class MeshRenderer : Component
     {

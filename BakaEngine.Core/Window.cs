@@ -8,9 +8,9 @@ using OpenTK.Mathematics;
 
 using BakaEngine.Core.Helpers;
 using BakaEngine.Core.Rendering;
-using BakaEngine.Core.ECS;
-using BakaEngine.Core.ECS.Components;
-using BakaEngine.Core.ECS.Scenes;
+using BakaEngine.Core;
+using BakaEngine.Core.Components;
+using BakaEngine.Core.Scenes;
 
 namespace BakaEngine.Core
 {
@@ -51,11 +51,11 @@ namespace BakaEngine.Core
 
             Texture baseTex = new Texture(Texture.LoadFromFile("Resources/Textures/texture.jpg"), TextureType.texture_diffuse);
             Material baseMat = new Material(0, 1, 32.0f);
-            Entity cubeObject = new Entity("Cube");
+            Gameobject cubeObject = new Gameobject("Cube");
             Mesh cubeMesh = new Mesh(BasicShapes.CUBE_VERTICES, BasicShapes.CUBE_INDICES, shader);
             MeshRenderer cubeMeshRenderer = new MeshRenderer(shader, cubeMesh, baseTex, baseMat);
 
-            cubeObject.entityComponents.Add(typeof(MeshRenderer), cubeMeshRenderer);
+            cubeObject.components.Add(typeof(MeshRenderer), cubeMeshRenderer);
 
             DirectionalLight dirLight = new DirectionalLight();
             dirLight.direction = new Vector3(-0.2f, -1.0f, -0.3f);
@@ -90,7 +90,7 @@ namespace BakaEngine.Core
                 }
 
                 //Draw all meshes in the scene.
-                foreach (Entity entity in SceneManager.currentActiveScene.entities)
+                foreach (Gameobject entity in SceneManager.currentActiveScene.entities)
                 {
                     if (entity == null)
                     {

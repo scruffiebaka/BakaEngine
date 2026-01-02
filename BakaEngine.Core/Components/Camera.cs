@@ -1,6 +1,6 @@
 using OpenTK.Mathematics;
 
-namespace BakaEngine.Core.ECS.Components
+namespace BakaEngine.Core.Components
 {
     public class Camera
     {

@@ -1,6 +1,6 @@
 using BakaEngine.Core.Helpers;
 
-namespace BakaEngine.Core.ECS.Scenes
+namespace BakaEngine.Core.Scenes
 {
     public sealed class SceneManager
     {

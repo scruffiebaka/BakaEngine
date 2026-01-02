@@ -1,4 +1,4 @@
-using BakaEngine.Core.ECS.Components;
+using BakaEngine.Core.Components;
 using OpenTK.Mathematics;
 
 namespace BakaEngine.Core.Helpers;

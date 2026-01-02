@@ -1,22 +1,22 @@
-using BakaEngine.Core.ECS.Components;
-using BakaEngine.Core.ECS;
+using BakaEngine.Core.Components;
+using BakaEngine.Core;
 
-namespace BakaEngine.Core.ECS.Scenes
+namespace BakaEngine.Core.Scenes
 {
     public class Scene
     {
         string Name;
-        public Entity? currentActiveCamera;
+        public Gameobject? currentActiveCamera;
 
         public Scene(string name)
         {
             this.Name = name;
         }
 
-        public List<Entity> entities = new List<Entity>();
+        public List<Gameobject> entities = new List<Gameobject>();
         public List<Light> lights = new List<Light>();
 
-        public void SetActiveCamera(Entity camera)
+        public void SetActiveCamera(Gameobject camera)
         {
             currentActiveCamera = camera;
         }

@@ -1,30 +1,28 @@
 using System;
 using System.Collections.Generic;
 
-using BakaEngine.Core.ECS.Components;
+using BakaEngine.Core.Components;
 using BakaEngine.Core.Helpers;
 
-namespace BakaEngine.Core.ECS
+namespace BakaEngine.Core
 {
-    public class Entity
+    public class Gameobject
     {
-        //private Entity? parent;
+        public string name;
 
-        public string entityName;
-
-        public Dictionary<Type, object> entityComponents = new Dictionary<Type, object>();
+        public Dictionary<Type, object> components = new Dictionary<Type, object>();
 
         public Transform transform;
 
-        public Entity(string name)
+        public Gameobject(string name)
         {
-            entityName = name;
+            this.name = name;
             transform = GetComponent<Transform>();
         }
 
         public bool TryGetComponent<T>(out T? component) where T : class
         {
-            if (entityComponents.TryGetValue(typeof(T), out var value))
+            if (components.TryGetValue(typeof(T), out var value))
             {
                 component = value as T;
                 return true;
@@ -35,10 +33,10 @@ namespace BakaEngine.Core.ECS
 
         public T GetComponent<T>() where T : class, new()
         {
-            if (!entityComponents.TryGetValue(typeof(T), out var value))
+            if (!components.TryGetValue(typeof(T), out var value))
             {
                 value = new T();
-                entityComponents[typeof(T)] = value;
+                components[typeof(T)] = value;
             }
             return (T)value;
         }

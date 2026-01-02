@@ -7,7 +7,7 @@ using OpenTK.Mathematics;
 using BakaEngine.Core.Rendering;
 using BakaEngine.Core.Helpers;
 
-namespace BakaEngine.Core.ECS.Components
+namespace BakaEngine.Core.Components
 {
     public struct Vertex
     {
