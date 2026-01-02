@@ -17,7 +17,7 @@ namespace BakaEngine.Core.Components
         //uhh test
         Vector3 defaultAttenuation = new Vector3(1.0f, 0.09f, 0.032f);
 
-        public MeshRenderer(Shader shader, Mesh mesh, Texture texture, Material material)
+        public void Initialize(Shader shader, Mesh mesh, Texture texture, Material material)
         {
             this.shader = shader;
             this.mesh = mesh;
@@ -30,9 +30,9 @@ namespace BakaEngine.Core.Components
             shader.Use();
 
             shader.SetMatrix4("model",
-                Matrix4.CreateTranslation(transform.Position)
-                * Matrix4.CreateScale(transform.Scale)
-                * Matrix4.CreateFromQuaternion(transform.Rotation));
+                    Matrix4.CreateScale(transform.Scale)
+                    * Matrix4.CreateFromQuaternion(transform.Rotation)
+                    * Matrix4.CreateTranslation(transform.Position));
 
             //TODO: also implement specular textures.
 
@@ -137,5 +137,12 @@ namespace BakaEngine.Core.Components
             }
         }
 
+
+        public override void Update()
+        {
+            base.Update();
+
+            Draw(Gameobject.transform);
+        }
     }
 }

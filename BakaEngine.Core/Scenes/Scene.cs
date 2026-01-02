@@ -13,7 +13,7 @@ namespace BakaEngine.Core.Scenes
             this.Name = name;
         }
 
-        public List<Gameobject> entities = new List<Gameobject>();
+        public List<Gameobject> gameobjects = new List<Gameobject>();
         public List<Light> lights = new List<Light>();
 
         public void SetActiveCamera(Gameobject camera)

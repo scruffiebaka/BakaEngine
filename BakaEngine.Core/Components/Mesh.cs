@@ -24,7 +24,7 @@ namespace BakaEngine.Core.Components
 
         public int VertexArrayObject, VertexBufferObject, ElementBufferObject;
 
-        public Mesh(List<Vertex> vertices, List<uint> indices, Shader shader)
+        public void Initialize(List<Vertex> vertices, List<uint> indices, Shader shader)
         {
             this.Vertices = vertices;
             this.Indices = indices;

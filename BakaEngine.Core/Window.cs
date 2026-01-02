@@ -51,11 +51,14 @@ namespace BakaEngine.Core
 
             Texture baseTex = new Texture(Texture.LoadFromFile("Resources/Textures/texture.jpg"), TextureType.texture_diffuse);
             Material baseMat = new Material(0, 1, 32.0f);
-            Gameobject cubeObject = new Gameobject("Cube");
-            Mesh cubeMesh = new Mesh(BasicShapes.CUBE_VERTICES, BasicShapes.CUBE_INDICES, shader);
-            MeshRenderer cubeMeshRenderer = new MeshRenderer(shader, cubeMesh, baseTex, baseMat);
 
-            cubeObject.components.Add(typeof(MeshRenderer), cubeMeshRenderer);
+            Gameobject cubeObject = new Gameobject("Cube");
+
+            Mesh cubeMesh = cubeObject.AddComponent<Mesh>();
+            cubeMesh.Initialize(BasicShapes.CUBE_VERTICES, BasicShapes.CUBE_INDICES, shader);
+
+            MeshRenderer cubeMeshRenderer = cubeObject.AddComponent<MeshRenderer>();
+            cubeMeshRenderer.Initialize(shader, cubeMesh, baseTex, baseMat);
 
             DirectionalLight dirLight = new DirectionalLight();
             dirLight.direction = new Vector3(-0.2f, -1.0f, -0.3f);
@@ -66,7 +69,7 @@ namespace BakaEngine.Core
             demoScene.lights.Add(dirLight);
             demoScene.lights.Add(flashlight);
 
-            demoScene.entities.Add(cubeObject);
+            demoScene.gameobjects.Add(cubeObject);
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -90,15 +93,15 @@ namespace BakaEngine.Core
                 }
 
                 //Draw all meshes in the scene.
-                foreach (Gameobject entity in SceneManager.currentActiveScene.entities)
+                foreach (Gameobject gameobject in SceneManager.currentActiveScene.gameobjects)
                 {
-                    if (entity == null)
+                    if (gameobject == null)
                     {
                         continue;
                     }
-                    if (entity.TryGetComponent<MeshRenderer>(out var renderer) && entity.TryGetComponent<Transform>(out var transform))
+                    foreach (Component component in gameobject.components.Values)
                     {
-                        renderer.Draw(transform);
+                        component.Update();
                     }
                 }
             }
@@ -125,6 +128,8 @@ namespace BakaEngine.Core
 
             flashlight.position = camera.Position;
             flashlight.direction = camera.Front;
+
+            Flashlight();
 
             TestCamera_Movement();
             UpdateFPS(args.Time);
@@ -157,11 +162,25 @@ namespace BakaEngine.Core
 
         #region flashlight
         Spotlight flashlight;
+        bool toggled = true;
         private void Flashlight()
         {
-            
+            if (Input.IsKeyPressed(Keys.F))
+            {
+                if (toggled)
+                {
+                    flashlight.spotAngle = 0f;
+                    toggled = false;
+                }
+                else
+                {
+                    flashlight.spotAngle = 30f;
+                    toggled = true;
+                }
+            }
         }
         #endregion
+
         private void TestCamera_Movement()
         {
             const float cameraSpeed = 1.5f;
