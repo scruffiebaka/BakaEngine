@@ -42,7 +42,7 @@ namespace BakaEngine.Core
 
             shader = new Shader("./Resources/Shaders/VertexShader.glsl", "./Resources/Shaders/FragmentShader.glsl");
             shader.Use();
-            
+
             camera = new Camera(Vector3.UnitZ * 3, Size.X / (float)Size.Y);
             CursorState = CursorState.Grabbed;
 
@@ -56,6 +56,15 @@ namespace BakaEngine.Core
             MeshRenderer cubeMeshRenderer = new MeshRenderer(shader, cubeMesh, baseTex, baseMat);
 
             cubeObject.entityComponents.Add(typeof(MeshRenderer), cubeMeshRenderer);
+
+            DirectionalLight dirLight = new DirectionalLight();
+            dirLight.direction = new Vector3(-0.2f, -1.0f, -0.3f);
+
+            flashlight = new Spotlight();
+            flashlight.spotAngle = 30.0f;
+
+            demoScene.lights.Add(dirLight);
+            demoScene.lights.Add(flashlight);
 
             demoScene.entities.Add(cubeObject);
         }
@@ -114,7 +123,11 @@ namespace BakaEngine.Core
                 Close();
             }
 
+            flashlight.position = camera.Position;
+            flashlight.direction = camera.Front;
+
             TestCamera_Movement();
+            UpdateFPS(args.Time);
         }
 
         protected override void OnUnload()
@@ -122,6 +135,33 @@ namespace BakaEngine.Core
             base.OnUnload();
         }
 
+        #region fps
+        double fpsTime = 0.0;
+        int fpsFrames = 0;
+
+        void UpdateFPS(double deltaTime)
+        {
+            fpsTime += deltaTime;
+            fpsFrames++;
+
+            if (fpsTime >= 1.0)
+            {
+                double fps = fpsFrames / fpsTime;
+                Console.WriteLine($"FPS: {fps:F2}");
+
+                fpsTime = 0.0;
+                fpsFrames = 0;
+            }
+        }
+        #endregion
+
+        #region flashlight
+        Spotlight flashlight;
+        private void Flashlight()
+        {
+            
+        }
+        #endregion
         private void TestCamera_Movement()
         {
             const float cameraSpeed = 1.5f;

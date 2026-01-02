@@ -14,6 +14,7 @@ namespace BakaEngine.Core.ECS.Scenes
         }
 
         public List<Entity> entities = new List<Entity>();
+        public List<Light> lights = new List<Light>();
 
         public void SetActiveCamera(Entity camera)
         {
