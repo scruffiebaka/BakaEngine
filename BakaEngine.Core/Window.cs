@@ -37,7 +37,7 @@ namespace BakaEngine.Core
             base.OnLoad();
 
             GL.LoadBindings(new GLFWBindingsContext());
-            GL.ClearColor(new Color4(24, 20, 28, 1));
+            GL.ClearColor(new Color4(0.53f, 0.81f, 0.92f, 1.0f));
             GL.Enable(EnableCap.DepthTest);
 
             shader = new Shader("./Resources/Shaders/VertexShader.glsl", "./Resources/Shaders/FragmentShader.glsl");
@@ -50,7 +50,9 @@ namespace BakaEngine.Core
             SceneManager.SetActiveScene(demoScene);
 
             Texture baseTex = new Texture(Texture.LoadFromFile("Resources/Textures/texture.jpg"), TextureType.texture_diffuse);
-            Material baseMat = new Material(0, 1, 32.0f);
+            Material baseMat = new Material(
+                Vector3.One, Vector3.One, 0, 1, 32.0f
+            );
 
             Gameobject cubeObject = new Gameobject("Cube");
 
@@ -62,14 +64,18 @@ namespace BakaEngine.Core
 
             DirectionalLight dirLight = new DirectionalLight();
             dirLight.direction = new Vector3(-0.2f, -1.0f, -0.3f);
+            dirLight.ambient = new Vector3(0.5f, 0.5f, 0.5f);
 
             flashlight = new Spotlight();
-            flashlight.spotAngle = 30.0f;
+            flashlight.spotAngle = 0.0f;
 
             demoScene.lights.Add(dirLight);
             demoScene.lights.Add(flashlight);
 
-            demoScene.gameobjects.Add(cubeObject);
+            //demoScene.gameobjects.Add(cubeObject);
+
+            //Gameobject goober = GLTFImporter.LoadModel("./Resources/duk.glb", shader);
+            Gameobject skibider = GLTFImporter.LoadModel("./Resources/reze.glb", shader);
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -104,6 +110,9 @@ namespace BakaEngine.Core
                         component.Update();
                     }
                 }
+
+                //Calculate de lightin'
+                SceneManager.currentActiveScene.CalculateLighting(shader);
             }
             else
             {
@@ -162,7 +171,7 @@ namespace BakaEngine.Core
 
         #region flashlight
         Spotlight flashlight;
-        bool toggled = true;
+        bool toggled = false;
         private void Flashlight()
         {
             if (Input.IsKeyPressed(Keys.F))
